@@ -1,62 +1,108 @@
 
+
+
+
 # HW4_package
 
-## Описание
+## Description
 
-Эта программа фильтрует FASTQ-последовательности на основе содержания GC, длины и качества прочтения по шкале phred33. После фильтрации программа может применять инструменты обработки последовательностей ДНК/РНК (такие как транскрипция, реверс, комплементарность или обратная комплементарность) к отфильтрованным последовательностям.
+This program filters FASTQ sequences based on GC content, sequence length, and quality score using the *phred33* scale. After filtering, the program can apply DNA/RNA sequence processing tools (such as transcription, reverse, complement, or reverse complement) to the filtered sequences.
 
-Пакет содержит две основные функции:
-1. `filter_fastq`: Фильтрует последовательности из словаря FASTQ по указанным пользователем критериям содержания GC, длины последовательности и порогам качества.
-2. `run_dna_rna_tools`: Применяет операции с последовательностями ДНК/РНК, такие как транскрипция, реверс, комплементарность или обратная комплементарность.
+Key Features:
 
-## Установка
+* `filter_fastq`: Filters FASTQ sequences based on user-defined criteria such as GC content, sequence length, and quality thresholds.
+* `run_dna_rna_tools`: Applies DNA/RNA sequence operations like transcription, reverse, complement, or reverse complement.
 
-Скачайте скрипт `HW4_package_main.py` и папку `source` с дополнительными модулями `suppl_filter_fastq.py` и `suppl_run_dna_rna_tools.py`. Убедитесь, что модули находятся в директории `source/`.  Например, скопируйте код и выполните в терминале:
+## Installation
+
+To use this package, follow these steps:
+
+Download the HW4_package_main.py script and the source folder with supplementary modules: `suppl_filter_fastq.py`, `suppl_run_dna_rna_tools.py`, and `bio_files_processor.py`. Ensure all modules are located within the `source/` directory.
+
+To clone the repository using Git:
 ```bash
 git clone git@github.com:vsubrakova/HW4_package.git
 ```
-После загрузки скрипта просто импортируйте функции в свой скрипт и вызовите любую из двух функций. Например:
+After downloading the script, you can import the functions into your own script:
 ```python
 from HW4_package_main import filter_fastq, run_dna_rna_tools
 ```
-## Использование
+## Usage
 
 ### ```filter_fastq(seqs, gc_bounds, length_bounds, quality_threshold)```
-Фильтрует последовательности FASTQ на основе указанных пользователем критериев.
+The function reads .fastq file and filters sequences based on GC content, sequence length, and quality score thresholds.
 
-**Аргументы**:
-- `seqs` (dict): Словарь, где ключи — это имена последовательностей, а значения — кортежи, содержащие нуклеотидную последовательность и строку качества.
-- `gc_bounds` (int или tuple, опционально): Диапазон содержания GC для фильтрации (по умолчанию: `(0, 100)`).
-- `length_bounds` (int или tuple, опционально): Диапазон длины последовательности для фильтрации (по умолчанию: `(0, 2**32)`).
-- `quality_threshold` (float, опционально): Порог среднего значения качества для фильтрации (по умолчанию: `0`).
+**Arguments**:
+* `input_fastq` (str): Path to the FASTQ file. Can be absolute or relative. If a relative path is used, place the `.fastq` file in the `input_data` folder and provide only the file name, as shown in the example.
+* `gc_bounds` (int or tuple, optional): The GC content range for filtering. If an integer is provided, it is treated as an upper bound with 0 as the lower bound. *Default is (0, 100)*.
+* `length_bounds` (int or tuple, optional): The sequence length range for filtering. If an integer is provided, it is treated as an upper bound with 0 as the lower bound. *Default is (0, 2\*\*32)*.
+* `quality_threshold` (float, optional): The minimum average quality threshold (phred33 scale). *Default is 0*.
+* `output_fastq` (str, optional): If provided, the filtered sequences will be written to a  file in the `filtered/ ` directory with this name. If not, function will store filtered sequence as a dictionary.
 
-**Возвращает**:
-- Новый словарь с последовательностями, которые прошли фильтрацию.
+**Returns**:
+- A new dictionary containing only sequences that meet the filtering criteria. 
 
-**Пример**:
+**Usage Scenarios**
+* Writing filtered sequences to an output file
+
+If the `output_fastq` argument is provided (e.g., a file name like "banana.py"), the function will:
+   * Filter the sequences based on the specified criteria.
+   * Write the filtered sequences to the file specified by the output_fastq parameter.
+No dictionary is returned by the function in this case, the results are saved directly to the file.
+
+Example:
 ```python
-filtered_seqs = filter_fastq(EXAMPLE_FASTQ, gc_bounds=(40, 60), length_bounds=(50, 100), quality_threshold=30)
+filtered_fastq = filter_fastq(
+    input_fastq="example_fastq.fastq",
+    gc_bounds=(40, 60),
+    length_bounds=(50, 100),
+    quality_threshold=30,
+    output_fastq="banana.py", # Returns output file with filtered sequences
+)
+```
+```python
+# output example
+filtered_fastq = {
+    '@SRX079804:1:SRR292678:1:1101:24563:24563 1:N:0:1 BH:failed': ('ATTAGCGAGGAGGAGTGCTGAGAAGATGTCGCCTACGCCGTTGAAATTCCCTTCAATCAGGGGGTACTGGAGGATACGAGTTTGTGTG','BFFFFFFFB@B@A<@D>DDACDDDEBEDEFFFBFFFEFFDFFF=CC@DDFD8FFFFFFF8/+.2,@7<<:?B/:<><-><@.A*C>D')}
 ```
 
+* Returning filtered sequences as a dictionary
+
+If the output_fastq argument is not provided (or set to None), the function will:
+    * Filter the sequences based on the specified criteria.
+    * Return the filtered sequences as a dictionary without writing to any output file.
+
+```python
+seqs = filter_fastq(
+    input_fastq="example_fastq.fastq",
+    gc_bounds=(40, 60),
+    length_bounds=(50, 100),
+    quality_threshold=30,
+    output_fastq=None  # No output file, returns dictionary
+)
+print(seqs) 
+```
+
+
 ### ```run_dna_rna_tools(*args, results=None)```
-Выполняет указанную операцию (например, транскрипция или обратная комплементарность) для набора последовательностей ДНК или РНК.
+The function performs a specified operation (e.g., transcription or reverse complement) on one or more DNA/RNA sequences.
 
-**Аргументы**:
-- `*args` (str): Переменное количество строк последовательностей, за которыми следует имя операции для выполнения.
-- `results` (list, опционально): Список для хранения результатов (по умолчанию: `None`).
+**Arguments**:
+* `*args` (str): Variable-length argument list where the last argument is the name of the operation, and the preceding arguments are DNA/RNA sequences.
+* `results` (list, optional): A list to store the results of the operations. Default is `None`).
 
-**Возвращает**:
-- Строку (для одной последовательности) или список (для нескольких последовательностей) с результатами операции.
+**Returns**:
+* A string (for a single sequence) or a list (for multiple sequences) containing the results of the operation.
 
-**Доступные операции**:
-- `transcribe`: Преобразует последовательность ДНК в РНК.
-- `reverse`: Возвращает последовательность в обратном порядке.
-- `complement`: Возвращает комплементарную последовательность ДНК.
-- `reverse_complement`: Возвращает обратную комплементарную последовательность ДНК.
+**Available Operations**:
+- `transcribe`:  Converts a DNA sequence into RNA.
+- `reverse`: Reverses the sequence.
+- `complement`: Returns the complementary DNA sequence.
+- `reverse_complement`: Returns the reverse complement of the DNA sequence.
 
-**Пример**:
+**Example**:
 ```python
 result = run_dna_rna_tools("AGCTAGC", "CGATCGA", "transcribe")
-print(result)  # Вывод: ['AGCUAGC', 'CGAUCGA']
+print(result)  # Output: ['AGCUAGC', 'CGAUCGA']
 ```
 
